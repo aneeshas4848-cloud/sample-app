@@ -1,1 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algo Trading Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --panel-2: #182237;
+      --text: #e8eefc;
+      --muted: #9fb0d3;
+      --border: #263453;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --accent: #60a5fa;
+      --chip: #1e293b;
+    }
 
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    button:hover, select:hover { border-color: var(--accent); }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--muted);
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 120px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+
+    .span-12 { grid-column: span 12; }
+    .span-6 { grid-column: span 6; }
+    .span-3 { grid-column: span 3; }
+
+    @media (max-width: 1100px) {
+      .span-6, .span-3 { grid-column: span 12; }
+    }
+
+    .card-title {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .big {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .good { color: var(--good); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .muted { color: var(--muted); }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      row-gap: 10px;
+      column-gap: 12px;
+      font-size: 14px;
+    }
+
+    .kv .k { color: var(--muted); }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(159,176,211,0.12);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .events {
+      max-height: 380px;
+      overflow: auto;
+      border-radius: 10px;
+    }
+
+    .pre {
+      background: #0a1020;
+      color: #dbe7ff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.45;
+      max-height: 380px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .footer {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill-long {
+      color: #d1fae5;
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.35);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill-short {
+      color: #fee2e2;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.35);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill-open {
+      color: #fde68a;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.35);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill-closed {
+      color: #bfdbfe;
+      background: rgba(96,165,250,0.12);
+      border: 1px solid rgba(96,165,250,0.35);
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .err {
+      color: #fecaca;
+      background: rgba(127,29,29,0.25);
+      border: 1px solid rgba(239,68,68,0.35);
+      padding: 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Algo Trading Dashboard</h1>
+        <div class="sub">Paper trading monitor for NIFTY200 / NIFTY500 bots</div>
+      </div>
+
+      <div class="controls">
+        <label class="badge">Bot</label>
+        <select id="botSelect">
+          <option value="n200">NIFTY200</option>
+          <option value="n500">NIFTY500</option>
+        </select>
+
+        <label class="badge">Auto Refresh</label>
+        <select id="refreshSelect">
+          <option value="5" selected>5 sec</option>
+          <option value="10">10 sec</option>
+          <option value="20">20 sec</option>
+          <option value="30">30 sec</option>
+          <option value="0">Off</option>
+        </select>
+
+        <button id="reloadBtn">Reload Now</button>
+        <span class="badge" id="statusBadge">Loading...</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card span-3">
+        <div class="card-title">Mode</div>
+        <div class="big" id="modeText">--</div>
+        <div class="footer" id="fileText">--</div>
+      </div>
+
+      <div class="card span-3">
+        <div class="card-title">Selected Symbol</div>
+        <div class="big" id="selectedSymbol">--</div>
+        <div class="chips">
+          <span id="biasPill" class="chip">--</span>
+          <span id="selectedKey" class="chip">--</span>
+        </div>
+      </div>
+
+      <div class="card span-3">
+        <div class="card-title">Daily PnL</div>
+        <div class="big" id="dailyPnl">--</div>
+        <div class="footer" id="capitalText">Capital: --</div>
+      </div>
+
+      <div class="card span-3">
+        <div class="card-title">Trade Count</div>
+        <div class="big" id="tradeCount">--</div>
+        <div class="footer" id="lastUpdated">Last updated: --</div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-title">Current Selection Details</div>
+        <div class="kv" id="selectionDetails"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-title">Open Position / Latest Position</div>
+        <div id="positionBox"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-title">Latest Completed Trade</div>
+        <div id="latestTradeBox"></div>
+      </div>
+
+      <div class="card span-6">
+        <div class="card-title">Performance Summary</div>
+        <div class="kv" id="perfSummary"></div>
+      </div>
+
+      <div class="card span-12">
+        <div class="card-title">Recent Events</div>
+        <div class="events">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 170px;">Time</th>
+                <th style="width: 140px;">Type</th>
+                <th style="width: 120px;">Symbol</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="eventsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card span-12">
+        <div class="card-title">Raw JSON</div>
+        <pre class="pre" id="rawJson">Loading...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileMap = {
+      n200: "data/dashboard_n200.json",
+      n500: "data/dashboard_n500.json"
+    };
+
+    let timer = null;
+
+    function fmtNum(v, digits = 2) {
+      if (v === null || v === undefined || v === "" || Number.isNaN(Number(v))) return "--";
+      return Number(v).toFixed(digits);
+    }
+
+    function fmtText(v) {
+      if (v === null || v === undefined || v === "") return "--";
+      return String(v);
+    }
+
+    function fmtPnl(v) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "--";
+      const n = Number(v);
+      const cls = n > 0 ? "good" : n < 0 ? "bad" : "";
+      return `<span class="${cls}">${n.toFixed(2)}</span>`;
+    }
+
+    function prettyTime(v) {
+      if (!v) return "--";
+      return String(v);
+    }
+
+    function setStatus(text, kind = "") {
+      const el = document.getElementById("statusBadge");
+      el.textContent = text;
+      el.className = "badge";
+      if (kind === "good") el.classList.add("good");
+      if (kind === "bad") el.classList.add("bad");
+      if (kind === "warn") el.classList.add("warn");
+    }
+
+    function getSession(data) {
+      return data.session || {};
+    }
+
+    function getStats(data) {
+      return data.stats || {};
+    }
+
+    function getEvents(data) {
+      return Array.isArray(data.events) ? data.events : [];
+    }
+
+    function getLatestEventByType(data, typeName) {
+      const events = getEvents(data);
+      for (let i = events.length - 1; i >= 0; i--) {
+        const ev = events[i];
+        const t = (ev.event || ev.type || "").toUpperCase();
+        if (t === typeName.toUpperCase()) {
+          return ev;
+        }
+      }
+      return null;
+    }
+
+    function getSelectedEvent(data) {
+      return getLatestEventByType(data, "SELECTED");
+    }
+
+    function getExitEvent(data) {
+      return getLatestEventByType(data, "EXIT");
+    }
+
+    function getEntryEvent(data) {
+      return getLatestEventByType(data, "ENTRY");
+    }
+
+    function getOpenPosition(data) {
+      const entry = getEntryEvent(data);
+      const exit = getExitEvent(data);
+
+      if (!entry) return null;
+      if (exit && new Date(exit.ts) >= new Date(entry.ts)) return null;
+
+      return entry;
+    }
+
+    function renderSummary(data, botKey) {
+      const session = getSession(data);
+      const stats = getStats(data);
+
+      document.getElementById("modeText").textContent = session.mode || "PAPER";
+      document.getElementById("fileText").textContent = fileMap[botKey];
+      document.getElementById("capitalText").textContent = `Capital: ${session.capital ?? "--"}`;
+      document.getElementById("tradeCount").textContent = stats.trades ?? 0;
+      document.getElementById("dailyPnl").innerHTML = fmtPnl(stats.realized_pnl ?? 0);
+      document.getElementById("lastUpdated").textContent = `Last updated: ${data.updated_at || "--"}`;
+    }
+
+    function renderSelection(data) {
+      const session = getSession(data);
+      const ev = getSelectedEvent(data);
+      const details = ev?.details || {};
+
+      document.getElementById("selectedSymbol").textContent = session.selected_symbol || ev?.symbol || "--";
+      document.getElementById("selectedKey").textContent = session.selected_key || details.instrument_key || "--";
+
+      const bias = details.bias || ev?.details?.bias || "--";
+      const biasPill = document.getElementById("biasPill");
+      biasPill.textContent = `Bias: ${bias}`;
+      biasPill.className = "chip";
+      if (bias === "LONG") biasPill.className = "pill-long";
+      if (bias === "SHORT") biasPill.className = "pill-short";
+
+      const rows = [
+        ["LTP", fmtNum(details.ltp)],
+        ["% Move", fmtNum(details.pct)],
+        ["Volume", fmtText(details.vol)],
+        ["Max Shares", fmtText(details.max_shares)],
+        ["Score", fmtNum(details.score)],
+        ["Watchlist", fmtText(details.watchlist)],
+        ["Mode", fmtText(details.mode)],
+        ["Scan Interval", details.scan_interval_sec ? `${details.scan_interval_sec}s` : "--"],
+        ["Focus Candles", fmtText(details.max_focus_candles)],
+        ["Rescan Interval", details.rescan_interval_min ? `${details.rescan_interval_min} min` : "--"],
+        ["EMA Gap %", details.ema_gap_pct ? fmtNum(Number(details.ema_gap_pct) * 100, 4) : "--"],
+        ["Stop Loss %", fmtText(details.stop_loss_pct)]
+      ];
+
+      document.getElementById("selectionDetails").innerHTML = rows.map(([k, v]) => `
+        <div class="k">${k}</div><div>${v}</div>
+      `).join("");
+    }
+
+    function renderPosition(data) {
+      const entry = getOpenPosition(data);
+      const box = document.getElementById("positionBox");
+
+      if (!entry) {
+        box.innerHTML = `<div class="muted">No open position.</div>`;
+        return;
+      }
+
+      const d = entry.details || {};
+      const side = entry.side || d.side || "--";
+
+      box.innerHTML = `
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="pill-open">OPEN POSITION</span>
+          <span class="${side === 'SHORT' ? 'pill-short' : 'pill-long'}">${fmtText(side)}</span>
+        </div>
+        <div class="kv">
+          <div class="k">Symbol</div><div>${fmtText(entry.symbol)}</div>
+          <div class="k">Entry</div><div>${fmtNum(entry.price)}</div>
+          <div class="k">Qty</div><div>${fmtText(entry.qty)}</div>
+          <div class="k">Stop Loss</div><div>${fmtNum(d.stop_loss)}</div>
+          <div class="k">Entry Time</div><div>${prettyTime(entry.ts)}</div>
+          <div class="k">Profit Lock %</div><div>${fmtText(d.profit_lock_pct)}</div>
+        </div>
+      `;
+    }
+
+    function renderLatestTrade(data) {
+      const ev = getExitEvent(data);
+      const box = document.getElementById("latestTradeBox");
+
+      if (!ev) {
+        box.innerHTML = `<div class="muted">No completed trades yet.</div>`;
+        return;
+      }
+
+      const d = ev.details || {};
+      const side = ev.side || "--";
+
+      box.innerHTML = `
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="${side === 'SHORT' ? 'pill-short' : 'pill-long'}">${fmtText(side)}</span>
+          <span class="pill-closed">${fmtText(d.reason || "CLOSED")}</span>
+        </div>
+        <div class="kv">
+          <div class="k">Symbol</div><div>${fmtText(ev.symbol)}</div>
+          <div class="k">Exit Price</div><div>${fmtNum(ev.price)}</div>
+          <div class="k">Qty</div><div>${fmtText(ev.qty)}</div>
+          <div class="k">PnL</div><div>${fmtPnl(d.pnl)}</div>
+          <div class="k">Exit Time</div><div>${prettyTime(ev.ts)}</div>
+          <div class="k">Reason</div><div>${fmtText(d.reason)}</div>
+        </div>
+      `;
+    }
+
+    function renderPerf(data) {
+      const stats = getStats(data);
+      const trades = Number(stats.trades || 0);
+      const wins = Number(stats.wins || 0);
+      const losses = Number(stats.losses || 0);
+      const totalPnl = Number(stats.realized_pnl || 0);
+      const avgPnl = trades > 0 ? totalPnl / trades : null;
+      const winRate = trades > 0 ? (wins * 100 / trades) : null;
+
+      const rows = [
+        ["Completed Trades", trades],
+        ["Wins", wins],
+        ["Losses", losses],
+        ["Win Rate", winRate === null ? "--" : `${winRate.toFixed(1)}%`],
+        ["Total PnL", fmtPnl(totalPnl)],
+        ["Avg Trade PnL", avgPnl === null ? "--" : fmtPnl(avgPnl)],
+        ["Last Exit PnL", fmtPnl(stats.last_exit_pnl ?? null)]
+      ];
+
+      document.getElementById("perfSummary").innerHTML = rows.map(([k, v]) => `
+        <div class="k">${k}</div><div>${v}</div>
+      `).join("");
+    }
+
+    function renderEvents(data) {
+      const tbody = document.getElementById("eventsTable");
+      const events = getEvents(data).slice().reverse().slice(0, 100);
+
+      if (!events.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">No events yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = events.map(ev => `
+        <tr>
+          <td>${prettyTime(ev.ts)}</td>
+          <td>${fmtText(ev.event || ev.type)}</td>
+          <td>${fmtText(ev.symbol)}</td>
+          <td>${JSON.stringify(ev.details || {})}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadDashboard() {
+      const botKey = document.getElementById("botSelect").value;
+      const file = fileMap[botKey] + `?t=${Date.now()}`;
+
+      setStatus("Loading...", "warn");
+
+      try {
+        const res = await fetch(file, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} while loading ${file}`);
+        }
+
+        const data = await res.json();
+
+        document.getElementById("rawJson").textContent = JSON.stringify(data, null, 2);
+        renderSummary(data, botKey);
+        renderSelection(data);
+        renderPosition(data);
+        renderLatestTrade(data);
+        renderPerf(data);
+        renderEvents(data);
+
+        setStatus("Live", "good");
+      } catch (err) {
+        document.getElementById("rawJson").innerHTML = `<div class="err">${String(err)}</div>`;
+        document.getElementById("selectionDetails").innerHTML = "";
+        document.getElementById("positionBox").innerHTML = `<div class="err">${String(err)}</div>`;
+        document.getElementById("latestTradeBox").innerHTML = `<div class="err">${String(err)}</div>`;
+        document.getElementById("perfSummary").innerHTML = "";
+        document.getElementById("eventsTable").innerHTML = `<tr><td colspan="4" class="err">${String(err)}</td></tr>`;
+        setStatus("Load Failed", "bad");
+      }
+    }
+
+    function resetTimer() {
+      if (timer) clearInterval(timer);
+      const sec = Number(document.getElementById("refreshSelect").value);
+      if (sec > 0) {
+        timer = setInterval(loadDashboard, sec * 1000);
+      }
+    }
+
+    document.getElementById("reloadBtn").addEventListener("click", loadDashboard);
+    document.getElementById("botSelect").addEventListener("change", loadDashboard);
+    document.getElementById("refreshSelect").addEventListener("change", () => {
+      resetTimer();
+      loadDashboard();
+    });
+
+    loadDashboard();
+    resetTimer();
+  </script>
+</body>
+</html>
